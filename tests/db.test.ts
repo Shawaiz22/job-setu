@@ -1,15 +1,13 @@
 import { describe, it, expect } from "vitest";
-import { config } from "dotenv";
-import { neon } from "@neondatabase/serverless";
 
-config({ path: ".env.local" });
+import { env } from "@/lib/env";
+import { db } from "@/db";
+import { sql } from "drizzle-orm";
 
 describe("Database Connectivity", () => {
-  it("executes a trivial query to Neon Postgres", async () => {
-    const dbUrl = process.env.DATABASE_URL;
-    expect(dbUrl).toBeDefined();
-    const sql = neon(dbUrl!);
-    const result = await sql`SELECT 1 as connected`;
-    expect(result[0]?.connected).toBe(1);
+  it("executes a trivial query to Neon Postgres via Drizzle client", async () => {
+    expect(env.DATABASE_URL).toBeDefined();
+    const result = await db.execute(sql`SELECT 1 as connected`);
+    expect(result.rows[0]?.connected).toBe(1);
   });
 });
