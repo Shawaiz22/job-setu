@@ -59,7 +59,7 @@ function LoginForm() {
           Welcome back
         </CardTitle>
         <CardDescription>
-          Enter your email and password to log in to Job Setu.
+          Enter your email and password to log in to Kariyar Setu.
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>

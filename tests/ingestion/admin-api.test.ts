@@ -32,10 +32,9 @@ vi.mock("@/auth", () => ({
   auth: vi.fn(async () => currentSession),
 }));
 
-// Mock AI generateObject so admin API test runs instantly without external rate limits
-vi.mock("ai", () => ({
-  generateObject: vi.fn(async () => ({
-    object: {
+vi.mock("ai", () => {
+  const handler = async () => {
+    const payload = {
       title: "MP Patwari Examination 2026",
       department: "Revenue Department, MP",
       state: "Madhya Pradesh",
@@ -52,9 +51,18 @@ vi.mock("ai", () => ({
             "Clause 2.1: Candidates must be between 18 and 40 years of age.",
         },
       ],
+    };
+    return { object: payload, output: payload };
+  };
+
+  return {
+    generateText: vi.fn(handler),
+    generateObject: vi.fn(handler),
+    Output: {
+      object: (cfg: unknown) => cfg,
     },
-  })),
-}));
+  };
+});
 
 describe("Admin Notifications Ingestion & Review API (M5 T2)", () => {
   beforeEach(async () => {

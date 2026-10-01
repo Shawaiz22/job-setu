@@ -1,249 +1,132 @@
-"use client";
-
-import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { redirect } from "next/navigation";
+import { desc, eq } from "drizzle-orm";
+import { auth } from "@/auth";
+import { db } from "@/db";
+import {
+  targets,
+  profiles,
+  skills,
+  opportunities,
+  archetypes,
+} from "@/db/schema";
+import { withUserOnly } from "@/lib/db/scope";
+import { decryptProfileFields } from "@/lib/crypto/encryption";
+import { evaluateEligibility } from "@/modules/eligibility/evaluate";
+import type {
+  EvaluationResult,
+  Requirement,
+} from "@/modules/eligibility/types";
 import { Button } from "@/components/ui/button";
-import { TargetCard, type TargetItem } from "@/components/targets/TargetCard";
+import { TargetsList } from "@/components/targets/TargetsList";
+import type { TargetItem } from "@/components/targets/TargetCard";
 
-export default function TargetsDashboardPage() {
-  const router = useRouter();
-  const [targets, setTargets] = useState<TargetItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<"all" | "eligible" | "blocked">("all");
+export const metadata = {
+  title: "Target Workspace — Kariyar Setu",
+  description:
+    "Track your target MP government opportunities, welfare schemes, and verified eligibility verdicts.",
+};
 
-  useEffect(() => {
-    let active = true;
+export default async function TargetsDashboardPage() {
+  const session = await auth();
+  if (!session?.user?.id) {
+    redirect("/login");
+  }
 
-    async function fetchTargets() {
-      try {
-        const res = await fetch("/api/v1/targets");
-        if (res.status === 401) {
-          router.push("/login");
-          return;
-        }
+  const userId = session.user.id;
 
-        if (!res.ok) {
-          throw new Error("Failed to load targets");
-        }
+  const [
+    userTargets,
+    [rawProfile],
+    userSkills,
+    liveOpportunities,
+    liveArchetypes,
+  ] = await Promise.all([
+    db
+      .select()
+      .from(targets)
+      .where(withUserOnly(targets, userId))
+      .orderBy(desc(targets.createdAt)),
+    db.select().from(profiles).where(withUserOnly(profiles, userId)).limit(1),
+    db.select().from(skills).where(withUserOnly(skills, userId)),
+    db.select().from(opportunities).where(eq(opportunities.status, "live")),
+    db.select().from(archetypes),
+  ]);
 
-        const data = await res.json();
-        if (active) {
-          setTargets(data.targets || []);
-        }
-      } catch (err: unknown) {
-        if (active) {
-          setError(
-            err instanceof Error ? err.message : "Error loading targets",
-          );
-        }
-      } finally {
-        if (active) {
-          setLoading(false);
-        }
-      }
-    }
+  const oppMap = new Map(liveOpportunities.map((o) => [o.id, o]));
+  const oppTitleMap = new Map(liveOpportunities.map((o) => [o.title, o]));
+  const archMap = new Map(liveArchetypes.map((a) => [a.id, a]));
+  const archTitleMap = new Map(liveArchetypes.map((a) => [a.title, a]));
 
-    fetchTargets();
-
-    return () => {
-      active = false;
-    };
-  }, [router]);
-
-  async function handleDelete(id: string) {
-    if (!confirm("Are you sure you want to remove this target?")) {
-      return;
-    }
-
-    setDeletingId(id);
+  let decryptedProfile = null;
+  if (rawProfile) {
     try {
-      const res = await fetch(`/api/v1/targets/${id}`, {
-        method: "DELETE",
-      });
-
-      if (!res.ok) {
-        throw new Error("Failed to remove target");
-      }
-
-      setTargets((prev) => prev.filter((t) => t.id !== id));
-    } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : "Could not delete target");
-    } finally {
-      setDeletingId(null);
+      decryptedProfile = decryptProfileFields(rawProfile);
+    } catch {
+      decryptedProfile = rawProfile;
     }
   }
 
-  const eligibleCount = targets.filter(
-    (t) => t.evaluation?.status === "eligible",
-  ).length;
-  const blockedCount = targets.filter(
-    (t) => t.evaluation?.status === "blocked",
-  ).length;
-  const needsInfoCount = targets.filter((t) => !t.evaluation).length;
+  const evaluatedOn = new Date().toISOString().split("T")[0]!;
 
-  const filteredTargets = targets.filter((t) => {
-    if (filter === "eligible") return t.evaluation?.status === "eligible";
-    if (filter === "blocked") return t.evaluation?.status === "blocked";
-    return true;
+  const targetsWithEvaluation: TargetItem[] = userTargets.map((target) => {
+    let requirements: Requirement[] = [];
+
+    if (target.kind === "govt_post" || target.kind === "scheme") {
+      const opp = oppMap.get(target.sourceId) || oppTitleMap.get(target.title);
+      if (opp) requirements = opp.requirements;
+    } else if (target.kind === "archetype") {
+      const arch =
+        archMap.get(target.sourceId) || archTitleMap.get(target.title);
+      if (arch) requirements = arch.requirements;
+    }
+
+    let evaluation: EvaluationResult | null = null;
+    if (decryptedProfile && requirements.length > 0) {
+      try {
+        evaluation = evaluateEligibility({
+          profile: decryptedProfile,
+          skills: userSkills.map((s) => ({
+            name: s.name,
+            evidence: s.evidence,
+          })),
+          requirements,
+          evaluatedOn,
+        });
+      } catch (err) {
+        console.error("Target evaluation error:", err);
+      }
+    }
+
+    return {
+      id: target.id,
+      kind: target.kind as TargetItem["kind"],
+      sourceId: target.sourceId,
+      title: target.title,
+      requirementsCount: requirements.length,
+      evaluation,
+    };
   });
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+    <div className="mx-auto max-w-5xl space-y-8 px-4 py-8 sm:px-6">
       {/* Top Header */}
-      <div className="flex flex-col items-start justify-between gap-4 border-b border-neutral-200 pb-6 sm:flex-row sm:items-center">
+      <div className="border-border/80 flex flex-col items-start justify-between gap-4 border-b pb-6 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-neutral-900 sm:text-3xl">
+          <h1 className="text-foreground text-3xl font-extrabold tracking-tight">
             Target Workspace
           </h1>
-          <p className="mt-1 text-sm text-neutral-600">
+          <p className="text-muted-foreground mt-1 text-sm">
             Real-time clause verification against MP Government recruitments,
             welfare schemes, and career paths.
           </p>
         </div>
         <Link href="/targets/new">
-          <Button className="bg-neutral-900 text-white hover:bg-neutral-800">
-            + Add Target
-          </Button>
+          <Button>+ Add Target</Button>
         </Link>
       </div>
 
-      {error && (
-        <div className="mt-6 rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
-          {error}
-        </div>
-      )}
-
-      {/* Summary KPI Counters */}
-      <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-2xs">
-          <div className="text-xs font-medium text-neutral-500">
-            Total Targets
-          </div>
-          <div className="mt-1 text-2xl font-bold text-neutral-900">
-            {loading ? "..." : targets.length}
-          </div>
-        </div>
-
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-4 shadow-2xs">
-          <div className="text-xs font-medium text-emerald-700">Eligible</div>
-          <div className="mt-1 text-2xl font-bold text-emerald-900">
-            {loading ? "..." : eligibleCount}
-          </div>
-        </div>
-
-        <div className="rounded-xl border border-rose-200 bg-rose-50/50 p-4 shadow-2xs">
-          <div className="text-xs font-medium text-rose-700">Blocked</div>
-          <div className="mt-1 text-2xl font-bold text-rose-900">
-            {loading ? "..." : blockedCount}
-          </div>
-        </div>
-
-        <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-4 shadow-2xs">
-          <div className="text-xs font-medium text-amber-700">
-            Needs Profile
-          </div>
-          <div className="mt-1 text-2xl font-bold text-amber-900">
-            {loading ? "..." : needsInfoCount}
-          </div>
-        </div>
-      </div>
-
-      {/* Filter Tabs if targets exist */}
-      {!loading && targets.length > 0 && (
-        <div className="mt-8 flex items-center justify-between">
-          <div className="flex rounded-lg border border-neutral-200 bg-neutral-100 p-0.5 text-xs font-medium">
-            <button
-              type="button"
-              onClick={() => setFilter("all")}
-              className={`rounded-md px-3 py-1.5 transition ${
-                filter === "all"
-                  ? "bg-white text-neutral-900 shadow-xs"
-                  : "text-neutral-600 hover:text-neutral-900"
-              }`}
-            >
-              All ({targets.length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setFilter("eligible")}
-              className={`rounded-md px-3 py-1.5 transition ${
-                filter === "eligible"
-                  ? "bg-white text-neutral-900 shadow-xs"
-                  : "text-neutral-600 hover:text-neutral-900"
-              }`}
-            >
-              Eligible ({eligibleCount})
-            </button>
-            <button
-              type="button"
-              onClick={() => setFilter("blocked")}
-              className={`rounded-md px-3 py-1.5 transition ${
-                filter === "blocked"
-                  ? "bg-white text-neutral-900 shadow-xs"
-                  : "text-neutral-600 hover:text-neutral-900"
-              }`}
-            >
-              Blocked ({blockedCount})
-            </button>
-          </div>
-
-          <div className="text-xs text-neutral-500">
-            Showing {filteredTargets.length} items
-          </div>
-        </div>
-      )}
-
-      {/* Target Content Grid / Loading / Empty State */}
-      <div className="mt-6">
-        {loading ? (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3].map((n) => (
-              <div
-                key={n}
-                className="h-64 animate-pulse rounded-xl border border-neutral-200 bg-neutral-100/70 p-5"
-              />
-            ))}
-          </div>
-        ) : targets.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-neutral-300 bg-neutral-50/70 p-12 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-200 text-xl font-bold text-neutral-600">
-              🎯
-            </div>
-            <h3 className="mt-4 text-base font-semibold text-neutral-900">
-              No targets tracked yet
-            </h3>
-            <p className="mx-auto mt-2 max-w-sm text-sm text-neutral-500">
-              Select verified MP recruitment notifications, welfare schemes, or
-              career paths to run deterministic clause checks.
-            </p>
-            <div className="mt-6">
-              <Link href="/targets/new">
-                <Button className="bg-neutral-900 text-white hover:bg-neutral-800">
-                  Browse Opportunities & Add Target
-                </Button>
-              </Link>
-            </div>
-          </div>
-        ) : filteredTargets.length === 0 ? (
-          <div className="rounded-xl border border-neutral-200 bg-white p-8 text-center text-sm text-neutral-500">
-            No targets match the selected filter.
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredTargets.map((target) => (
-              <TargetCard
-                key={target.id}
-                target={target}
-                onDelete={handleDelete}
-                deleting={deletingId === target.id}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+      <TargetsList initialTargets={targetsWithEvaluation} />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { generateObject } from "ai";
+import { generateText, Output } from "ai";
 import { google } from "@ai-sdk/google";
 import { z } from "zod";
 import { stripPII } from "@/modules/privacy/redact";
@@ -123,7 +123,7 @@ export async function extractRequirementsFromText(
 
   // 2. Instruct the model using strict deterministic rules (SPEC.md 7.4)
   const prompt = `
-You are the Job Setu Eligibility Rule Ingestion Engine for Madhya Pradesh Government recruitments and job descriptions.
+You are the Kariyar Setu Eligibility Rule Ingestion Engine for Madhya Pradesh Government recruitments and job descriptions.
 Extract all eligibility rules and statutory criteria from the following document into structured requirements.
 
 RULES:
@@ -138,18 +138,37 @@ DOCUMENT CONTENT:
 ${sanitizedText}
 `;
 
-  const { object } = await generateObject({
-    model: google("gemini-2.5-flash"),
-    schema: ExtractionPayloadSchema,
-    prompt,
-    temperature: 0.1, // Near-zero temperature for deterministic extraction
-  });
+  const primaryModel = process.env.GEMINI_MODEL || "gemini-3.5-flash-lite";
+
+  let extractedPayload: z.infer<typeof ExtractionPayloadSchema>;
+  try {
+    const res = await generateText({
+      model: google(primaryModel),
+      output: Output.object({
+        schema: ExtractionPayloadSchema,
+      }),
+      prompt,
+      temperature: 0.1, // Near-zero temperature for deterministic extraction
+    });
+    extractedPayload = res.output;
+  } catch {
+    // Fallback to gemini-3.8-flash if primary model encounters a demand spike
+    const res = await generateText({
+      model: google("gemini-3.8-flash"),
+      output: Output.object({
+        schema: ExtractionPayloadSchema,
+      }),
+      prompt,
+      temperature: 0.1,
+    });
+    extractedPayload = res.output;
+  }
 
   // 3. Clause Enforcement: Drop any requirement lacking an exact quoted citation (SPEC.md 7.4)
   const validatedRequirements: Requirement[] = [];
   let droppedCount = 0;
 
-  for (const raw of object.requirements) {
+  for (const raw of extractedPayload.requirements) {
     if (!raw.clause || raw.clause.trim().length === 0) {
       droppedCount++;
       continue;
@@ -192,10 +211,10 @@ ${sanitizedText}
   }
 
   return {
-    title: object.title || defaultTitle,
-    department: object.department || defaultDepartment,
-    state: object.state || defaultState,
-    closesOn: object.closesOn || null,
+    title: extractedPayload.title || defaultTitle,
+    department: extractedPayload.department || defaultDepartment,
+    state: extractedPayload.state || defaultState,
+    closesOn: extractedPayload.closesOn || null,
     requirements: validatedRequirements,
     droppedCount,
   };
