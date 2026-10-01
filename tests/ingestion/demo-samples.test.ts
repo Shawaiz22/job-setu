@@ -3,9 +3,9 @@ import { SEED_OPPORTUNITIES } from "@/modules/seed/eligibility";
 import { DEMO_UNPROCESSED_SAMPLES } from "@/modules/seed/demo-samples";
 import { extractRequirementsFromText } from "@/modules/ingestion/extract";
 
-vi.mock("ai", () => ({
-  generateObject: vi.fn(async () => ({
-    object: {
+vi.mock("ai", () => {
+  const handler = async () => {
+    const payload = {
       title: "MP High Court District Judge (Entry Level) Examination 2026",
       department: "High Court of Madhya Pradesh, Jabalpur",
       state: "Madhya Pradesh",
@@ -32,9 +32,18 @@ vi.mock("ai", () => ({
             "Clause 2(B): Must have been an Advocate continuously practicing for not less than 7 years.",
         },
       ],
+    };
+    return { object: payload, output: payload };
+  };
+
+  return {
+    generateText: vi.fn(handler),
+    generateObject: vi.fn(handler),
+    Output: {
+      object: (cfg: unknown) => cfg,
     },
-  })),
-}));
+  };
+});
 
 describe("MP Notification Corpus & Live Demo Data (M5 T5)", () => {
   it("contains at least 10 real MP notifications in seed corpus with official clause citations", () => {

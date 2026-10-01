@@ -69,7 +69,8 @@ export default function RegisterPage() {
             Create an account
           </CardTitle>
           <CardDescription>
-            Enter your details below to create your Job Setu student account.
+            Enter your details below to create your Kariyar Setu candidate
+            account.
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>

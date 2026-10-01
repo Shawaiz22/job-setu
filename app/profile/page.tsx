@@ -1,8 +1,12 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { redirect } from "next/navigation";
+import Link from "next/link";
+import { auth } from "@/auth";
+import { db } from "@/db";
+import { profiles, skills } from "@/db/schema";
+import { withUserOnly } from "@/lib/db/scope";
+import { decryptProfileFields } from "@/lib/crypto/encryption";
+import { ProfileForm, SkillItem } from "@/components/profile/ProfileForm";
+import { ConsentManager } from "@/components/privacy/ConsentManager";
 import {
   Card,
   CardContent,
@@ -11,263 +15,123 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { ConsentManager } from "@/components/privacy/ConsentManager";
+import { Button } from "@/components/ui/button";
 
-export default function ProfilePage() {
-  const router = useRouter();
+export const metadata = {
+  title: "Profile & Privacy — Kariyar Setu",
+  description:
+    "Manage your educational profile and privacy settings for automated eligibility verification.",
+};
 
-  const [dateOfBirth, setDateOfBirth] = useState("");
-  const [category, setCategory] = useState("General");
-  const [domicileState, setDomicileState] = useState("Madhya Pradesh");
-  const [qualification, setQualification] = useState("");
-  const [preference, setPreference] = useState<"both" | "govt" | "private">(
-    "both",
-  );
+export default async function ProfilePage() {
+  const session = await auth();
 
-  const [initialLoading, setInitialLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [message, setMessage] = useState<{
-    type: "success" | "error";
-    text: string;
-  } | null>(null);
-
-  useEffect(() => {
-    async function loadProfile() {
-      try {
-        const res = await fetch("/api/v1/profile");
-        if (res.status === 401) {
-          router.push("/login");
-          return;
-        }
-
-        if (res.ok) {
-          const data = await res.json();
-          if (data.profile) {
-            setDateOfBirth(data.profile.dateOfBirth || "");
-            setCategory(data.profile.category || "General");
-            setDomicileState(data.profile.domicileState || "Madhya Pradesh");
-            setQualification(data.profile.qualification || "");
-            setPreference(data.profile.preference || "both");
-          }
-        }
-      } catch {
-        setMessage({
-          type: "error",
-          text: "Failed to load profile. Please refresh.",
-        });
-      } finally {
-        setInitialLoading(false);
-      }
-    }
-
-    loadProfile();
-  }, [router]);
-
-  async function handleSave(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setMessage(null);
-    setSaving(true);
-
-    try {
-      const res = await fetch("/api/v1/profile", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          dateOfBirth,
-          category,
-          domicileState,
-          qualification,
-          preference,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setMessage({
-          type: "error",
-          text: data.error || "Failed to update profile",
-        });
-        setSaving(false);
-        return;
-      }
-
-      setMessage({
-        type: "success",
-        text: "Profile updated successfully.",
-      });
-    } catch {
-      setMessage({
-        type: "error",
-        text: "Network error occurred while saving profile.",
-      });
-    } finally {
-      setSaving(false);
-    }
+  if (!session?.user?.id) {
+    redirect("/login");
   }
 
-  async function handleDeleteData() {
-    const confirmed = window.confirm(
-      "Are you sure you want to delete all your profile data? This action cascades and cannot be undone.",
-    );
-    if (!confirmed) return;
-
-    setDeleting(true);
-    try {
-      const res = await fetch("/api/v1/profile", { method: "DELETE" });
-      if (res.ok) {
-        setDateOfBirth("");
-        setCategory("General");
-        setDomicileState("Madhya Pradesh");
-        setQualification("");
-        setPreference("both");
-        setMessage({
-          type: "success",
-          text: "Your profile data has been deleted.",
-        });
-      } else {
-        setMessage({
-          type: "error",
-          text: "Failed to delete data. Please try again.",
-        });
-      }
-    } catch {
-      setMessage({
-        type: "error",
-        text: "Network error occurred while deleting data.",
-      });
-    } finally {
-      setDeleting(false);
-    }
-  }
-
-  if (initialLoading) {
+  // Admin users manage circulars and do not maintain a student candidate profile
+  if (session.user.isAdmin) {
     return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <p className="text-muted-foreground text-sm">Loading your profile...</p>
+      <div className="mx-auto max-w-2xl px-4 py-12">
+        <Card className="border-border/80 shadow-md">
+          <CardHeader>
+            <div className="bg-primary/10 text-primary inline-flex w-fit items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold">
+              System Administrator
+            </div>
+            <CardTitle className="text-2xl font-bold tracking-tight">
+              Admin Console Overview
+            </CardTitle>
+            <CardDescription className="text-sm leading-relaxed">
+              You are signed in with an administrative account. Student
+              demographic forms and personal eligibility checks are disabled for
+              admins. You have full access to ingest notifications, parse rule
+              clauses, and oversee candidate intelligence.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-muted-foreground space-y-3 text-sm">
+            <p>
+              To extract eligibility rules from government circulars or PDF
+              notifications, proceed to the notification management console.
+            </p>
+          </CardContent>
+          <CardFooter className="pt-2">
+            <Link href="/admin/notifications">
+              <Button>Go to Admin Notifications &amp; Extraction</Button>
+            </Link>
+          </CardFooter>
+        </Card>
       </div>
     );
   }
 
+  // Fetch student profile directly from database
+  let initialProfile = null;
+  try {
+    const [rawProfile] = await db
+      .select()
+      .from(profiles)
+      .where(withUserOnly(profiles, session.user.id));
+
+    if (rawProfile) {
+      try {
+        const decrypted = decryptProfileFields(rawProfile);
+        initialProfile = {
+          dateOfBirth: decrypted.dateOfBirth,
+          category: decrypted.category,
+          domicileState: decrypted.domicileState,
+          qualification: decrypted.qualification,
+          preference: decrypted.preference,
+        };
+      } catch {
+        // Fallback in case raw plaintext exists
+        initialProfile = {
+          dateOfBirth: rawProfile.dateOfBirth,
+          category: rawProfile.category,
+          domicileState: rawProfile.domicileState,
+          qualification: rawProfile.qualification,
+          preference: rawProfile.preference,
+        };
+      }
+    }
+  } catch (error) {
+    console.error("Failed to load profile on server:", error);
+  }
+
+  // Fetch candidate skills
+  let initialSkills: SkillItem[] = [];
+  try {
+    const userSkills = await db
+      .select({
+        id: skills.id,
+        name: skills.name,
+        evidence: skills.evidence,
+      })
+      .from(skills)
+      .where(withUserOnly(skills, session.user.id));
+
+    initialSkills = userSkills as SkillItem[];
+  } catch (error) {
+    console.error("Failed to load user skills on server:", error);
+  }
+
   return (
-    <div className="mx-auto max-w-2xl px-4 py-8">
-      <Card className="shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold tracking-tight">
-            Student Profile
-          </CardTitle>
-          <CardDescription>
-            Enter your details once. Job Setu evaluates your eligibility across
-            Madhya Pradesh government opportunities and welfare schemes.
-          </CardDescription>
-        </CardHeader>
-        <form onSubmit={handleSave}>
-          <CardContent className="space-y-5">
-            {message && (
-              <div
-                className={`rounded-lg p-3 text-sm font-medium ${
-                  message.type === "success"
-                    ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
-                    : "bg-destructive/15 text-destructive"
-                }`}
-              >
-                {message.text}
-              </div>
-            )}
+    <div className="mx-auto max-w-2xl space-y-8 px-4 py-8">
+      <div>
+        <h1 className="text-foreground text-3xl font-extrabold tracking-tight">
+          Candidate Profile
+        </h1>
+        <p className="text-muted-foreground mt-1 text-sm">
+          Enter your demographic and academic qualifications once. Kariyar Setu
+          evaluates every MP government notification against your exact profile.
+        </p>
+      </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="dateOfBirth">Date of Birth</Label>
-              <Input
-                id="dateOfBirth"
-                type="date"
-                value={dateOfBirth}
-                onChange={(e) => setDateOfBirth(e.target.value)}
-                required
-              />
-              <p className="text-muted-foreground text-xs">
-                Used to verify age eligibility and cutoff criteria.
-              </p>
-            </div>
+      <ProfileForm
+        initialProfile={initialProfile}
+        initialSkills={initialSkills}
+      />
 
-            <div className="space-y-2">
-              <Label htmlFor="category">Social Category / Reservation</Label>
-              <select
-                id="category"
-                className="border-input bg-background focus-visible:ring-ring flex h-9 w-full rounded-md border px-3 py-1 text-sm shadow-xs transition-colors focus-visible:ring-1 focus-visible:outline-none"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                required
-              >
-                <option value="General">General / UR</option>
-                <option value="OBC">OBC (Other Backward Class)</option>
-                <option value="SC">SC (Scheduled Caste)</option>
-                <option value="ST">ST (Scheduled Tribe)</option>
-                <option value="EWS">EWS (Economically Weaker Section)</option>
-              </select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="domicileState">Domicile State</Label>
-              <Input
-                id="domicileState"
-                type="text"
-                placeholder="Madhya Pradesh"
-                value={domicileState}
-                onChange={(e) => setDomicileState(e.target.value)}
-                required
-              />
-              <p className="text-muted-foreground text-xs">
-                Required for state-specific quotas and welfare schemes.
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="qualification">Highest Qualification</Label>
-              <Input
-                id="qualification"
-                type="text"
-                placeholder="e.g. 12th Pass, Graduate in Science, B.Tech CSE"
-                value={qualification}
-                onChange={(e) => setQualification(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="preference">Opportunity Preference</Label>
-              <select
-                id="preference"
-                className="border-input bg-background focus-visible:ring-ring flex h-9 w-full rounded-md border px-3 py-1 text-sm shadow-xs transition-colors focus-visible:ring-1 focus-visible:outline-none"
-                value={preference}
-                onChange={(e) =>
-                  setPreference(e.target.value as "both" | "govt" | "private")
-                }
-              >
-                <option value="both">Both Government &amp; Private</option>
-                <option value="govt">Government Opportunities Only</option>
-                <option value="private">Private Opportunities Only</option>
-              </select>
-            </div>
-          </CardContent>
-          <CardFooter className="flex flex-col gap-4 sm:flex-row sm:justify-between">
-            <Button type="submit" disabled={saving}>
-              {saving ? "Saving..." : "Save Profile"}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="text-destructive hover:bg-destructive/10"
-              onClick={handleDeleteData}
-              disabled={deleting}
-            >
-              {deleting ? "Deleting..." : "Delete My Data"}
-            </Button>
-          </CardFooter>
-        </form>
-      </Card>
       <ConsentManager />
     </div>
   );
