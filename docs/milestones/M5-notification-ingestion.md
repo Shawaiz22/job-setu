@@ -39,13 +39,14 @@ Provide a robust, legally grounded notification ingestion pipeline that extracts
 
 ### T2 — Admin Notifications API (`app/api/v1/admin/notifications/`)
 
-**Status:** todo  
-**Owner:**
+**Status:** done  
+**Owner:** Antigravity (Ponytail)
 
-- [ ] Implement `POST /api/v1/admin/notifications` (accepts PDF multipart or JD text, extracts rules, saves draft)
-- [ ] Implement `PUT /api/v1/admin/notifications/[id]` (updates requirements, transitions status `draft` → `live`)
-- [ ] Implement `GET /api/v1/admin/notifications` (lists drafts and live opportunities for review)
-- [ ] Add admin role check middleware/guard
+- [x] Implement `POST /api/v1/admin/notifications` (accepts PDF multipart or JD text, extracts rules, saves draft)
+- [x] Implement `PUT /api/v1/admin/notifications/[id]` (updates requirements, transitions status `draft` → `live`)
+- [x] Implement `GET /api/v1/admin/notifications` (lists drafts and live opportunities for review)
+- [x] Add admin role check middleware/guard
+      **Notes:** Strict draft isolation verified: draft opportunities are invisible to candidates until admin publication to `live`. All admin endpoints protected.
 
 ### T3 — Admin Review & Publish UI (`app/admin/notifications/page.tsx`)
 
