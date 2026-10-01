@@ -11,7 +11,7 @@ Sensitive data handling is guaranteed and proven correct before any sensitive da
 
 - [x] `modules/privacy/redact.ts` exports pure functions `stripPII(text)` and `restorePII(text, map)` with 100% test coverage
 - [x] A test proves `stripPII` turns real resume/profile lines into anonymized tokens (e.g., `[NAME]`, `[EMAIL]`, `[PHONE]`, `[DOB]`)
-- [ ] Application-level encryption (`lib/crypto/encryption.ts`) with AES-256-GCM encrypts `dateOfBirth`, `category`, and `domicileState` before writing to Postgres and decrypts on retrieval
+- [x] Application-level encryption (`lib/crypto/encryption.ts`) with AES-256-GCM encrypts `dateOfBirth`, `category`, and `domicileState` before writing to Postgres and decrypts on retrieval
 - [ ] Logger / error reporting wrapper (`lib/logger.ts`) proves that sensitive fields cannot leak into logs or error traces even during exceptions
 - [ ] Consent tracking table (`consents`) and UI verify purpose-bound, versioned, revocable consent before processing sensitive data
 - [ ] `GET /api/v1/profile/export` returns the user's full data export as JSON
@@ -33,13 +33,13 @@ Sensitive data handling is guaranteed and proven correct before any sensitive da
 
 ### T2 — Application-Level Encryption for Sensitive Profile Fields
 
-**Status:** todo  
-**Owner:**
+**Status:** done  
+**Owner:** Antigravity (Ponytail)
 
-- [ ] Implement AES-256-GCM authenticated encryption/decryption in `lib/crypto/encryption.ts` using native `node:crypto`
-- [ ] Derive key from environment secret (`ENCRYPTION_KEY` or `AUTH_SECRET`)
-- [ ] Wire encryption into `db/schema.ts` / profile repository layer so `dateOfBirth`, `category`, and `domicileState` are encrypted at rest
-- [ ] Write tests in `tests/privacy/encryption.test.ts` verifying ciphertext stored in database cannot be read in plaintext
+- [x] Implement AES-256-GCM authenticated encryption/decryption in `lib/crypto/encryption.ts` using native `node:crypto`
+- [x] Derive key from environment secret (`ENCRYPTION_KEY` or `AUTH_SECRET`)
+- [x] Wire encryption into `db/schema.ts` / profile repository layer so `dateOfBirth`, `category`, and `domicileState` are encrypted at rest
+- [x] Write tests in `tests/privacy/encryption.test.ts` verifying ciphertext stored in database cannot be read in plaintext
 
 ### T3 — Log & Error Trace Sanitizer
 
@@ -75,5 +75,6 @@ Sensitive data handling is guaranteed and proven correct before any sensitive da
 
 ## Changelog
 
+- 2026-10-01: Completed T2 (AES-256-GCM application-level encryption for sensitive profile attributes at rest, wired into profile route, verified via `tests/privacy/encryption.test.ts`).
 - 2026-10-01: Completed T1 (PII Redaction Layer with `stripPII` and `restorePII`, pure module, 100% test coverage in `tests/privacy/redact.test.ts`).
 - 2026-10-01: Created initial milestone document for M2 (Privacy Foundation) per `SPEC.md` section 9 and `MILESTONES.md`.
