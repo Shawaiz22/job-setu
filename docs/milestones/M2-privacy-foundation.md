@@ -13,7 +13,7 @@ Sensitive data handling is guaranteed and proven correct before any sensitive da
 - [x] A test proves `stripPII` turns real resume/profile lines into anonymized tokens (e.g., `[NAME]`, `[EMAIL]`, `[PHONE]`, `[DOB]`)
 - [x] Application-level encryption (`lib/crypto/encryption.ts`) with AES-256-GCM encrypts `dateOfBirth`, `category`, and `domicileState` before writing to Postgres and decrypts on retrieval
 - [x] Logger / error reporting wrapper (`lib/logger.ts`) proves that sensitive fields cannot leak into logs or error traces even during exceptions
-- [ ] Consent tracking table (`consents`) and UI verify purpose-bound, versioned, revocable consent before processing sensitive data
+- [x] Consent tracking table (`consents`) and UI verify purpose-bound, versioned, revocable consent before processing sensitive data
 - [ ] `GET /api/v1/profile/export` returns the user's full data export as JSON
 - [ ] Cascading deletion test proves that deleting a user or profile leaves zero orphaned rows across `profiles`, `skills`, `targets`, `consents`, and `experiences`
 - [ ] All quality checks pass (`npm run typecheck && npm run lint && npm run test && npm run build`)
@@ -52,13 +52,13 @@ Sensitive data handling is guaranteed and proven correct before any sensitive da
 
 ### T4 — Purpose-Bound Consent Model & UI
 
-**Status:** todo  
-**Owner:**
+**Status:** done  
+**Owner:** Antigravity (Ponytail)
 
-- [ ] Implement consent service in `lib/consent.ts` managing versioned, purpose-bound consents (`consents` table)
-- [ ] Implement `POST /api/v1/consent` and `DELETE /api/v1/consent/[purpose]` endpoints
-- [ ] Build Consent modal/banner in UI requiring explicit consent before profile analysis
-- [ ] Write tests in `tests/privacy/consent.test.ts`
+- [x] Implement consent service in `lib/consent.ts` managing versioned, purpose-bound consents (`consents` table)
+- [x] Implement `POST /api/v1/consent` and `DELETE /api/v1/consent/[purpose]` endpoints
+- [x] Build Consent modal/banner in UI requiring explicit consent before profile analysis
+- [x] Write tests in `tests/privacy/consent.test.ts`
 
 ### T5 — Data Subject Export & Verified Cascade Deletion
 
@@ -75,6 +75,7 @@ Sensitive data handling is guaranteed and proven correct before any sensitive da
 
 ## Changelog
 
+- 2026-10-01: Completed T4 (Purpose-bound, versioned, revocable consent service `lib/consent.ts`, `/api/v1/consent` routes, `ConsentManager` UI, verified via `tests/privacy/consent.test.ts`).
 - 2026-10-01: Completed T3 (Log & error trace sanitizer `lib/logger.ts` preventing sensitive leaks into logs or traces, verified via `tests/privacy/logger.test.ts`).
 - 2026-10-01: Completed T2 (AES-256-GCM application-level encryption for sensitive profile attributes at rest, wired into profile route, verified via `tests/privacy/encryption.test.ts`).
 - 2026-10-01: Completed T1 (PII Redaction Layer with `stripPII` and `restorePII`, pure module, 100% test coverage in `tests/privacy/redact.test.ts`).
