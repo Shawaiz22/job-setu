@@ -20,7 +20,7 @@ Keep this table accurate. It is the first thing anyone reads.
 | M2        | Privacy foundation      | complete                         |
 | M3        | Eligibility engine      | complete                         |
 | M4        | Target workspace UI     | complete                         |
-| M5        | Notification ingestion  | not started                      |
+| M5        | Notification ingestion  | in progress                      |
 | M6        | Schemes and demo polish | not started                      |
 | M7        | Submission pack         | not started                      |
 | M8+       | Post-submission         | locked — see the note at the end |
