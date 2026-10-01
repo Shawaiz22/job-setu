@@ -89,6 +89,12 @@ export default async function TargetWorkspacePage({ params }: PageProps) {
 
   // 4. Perform evaluation if consent and profile exist
   let evaluation: EvaluationResult | null = null;
+  const alternativeSchemes: {
+    id: string;
+    title: string;
+    department: string;
+    score: number;
+  }[] = [];
   const evaluatedOn = new Date().toISOString().split("T")[0]!;
 
   if (hasConsent && hasProfile && rawProfile) {
@@ -143,6 +149,47 @@ export default async function TargetWorkspacePage({ params }: PageProps) {
       } catch (err) {
         console.error("Target clause evaluation error:", err);
       }
+
+      // M6: Evaluate alternative MP schemes if blocked
+      if (evaluation?.status === "blocked" && decryptedProfile) {
+        try {
+          const liveSchemes = await db
+            .select()
+            .from(opportunities)
+            .where(
+              and(
+                eq(opportunities.kind, "scheme"),
+                eq(opportunities.status, "live"),
+              ),
+            )
+            .limit(12);
+
+          for (const s of liveSchemes) {
+            if (s.id === target.sourceId) continue;
+            const schemeEval = evaluateEligibility({
+              profile: decryptedProfile,
+              skills: userSkills.map((sk) => ({
+                name: sk.name,
+                evidence: sk.evidence,
+              })),
+              requirements: s.requirements,
+              evaluatedOn,
+            });
+
+            if (schemeEval.status === "eligible") {
+              alternativeSchemes.push({
+                id: s.id,
+                title: s.title,
+                department: s.department,
+                score: schemeEval.score,
+              });
+              if (alternativeSchemes.length >= 2) break;
+            }
+          }
+        } catch (err) {
+          console.error("Failed to query alternative schemes:", err);
+        }
+      }
     }
   }
 
@@ -159,6 +206,7 @@ export default async function TargetWorkspacePage({ params }: PageProps) {
         evaluatedOn={evaluatedOn}
         hasConsent={hasConsent}
         hasProfile={hasProfile}
+        alternativeSchemes={alternativeSchemes}
       />
     </div>
   );
