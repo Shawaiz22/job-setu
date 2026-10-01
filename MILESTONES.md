@@ -13,17 +13,17 @@
 
 Keep this table accurate. It is the first thing anyone reads.
 
-| Milestone | Title                   | Status                                        |
-| --------- | ----------------------- | --------------------------------------------- |
-| M0        | Bootstrap               | complete                                      |
-| M1        | Data model and auth     | in progress — T1–T5 done, T6 and T7 remaining |
-| M2        | Privacy foundation      | not started                                   |
-| M3        | Eligibility engine      | not started                                   |
-| M4        | Target workspace UI     | not started                                   |
-| M5        | Notification ingestion  | not started                                   |
-| M6        | Schemes and demo polish | not started                                   |
-| M7        | Submission pack         | not started                                   |
-| M8+       | Post-submission         | locked — see the note at the end              |
+| Milestone | Title                   | Status                           |
+| --------- | ----------------------- | -------------------------------- |
+| M0        | Bootstrap               | complete                         |
+| M1        | Data model and auth     | complete                         |
+| M2        | Privacy foundation      | not started                      |
+| M3        | Eligibility engine      | not started                      |
+| M4        | Target workspace UI     | not started                      |
+| M5        | Notification ingestion  | not started                      |
+| M6        | Schemes and demo polish | not started                      |
+| M7        | Submission pack         | not started                      |
+| M8+       | Post-submission         | locked — see the note at the end |
 
 **MVP cut line is after M6.** Everything below it is optional. Everything above it ships.
 
@@ -147,41 +147,42 @@ commitlint, Vitest, Drizzle, Neon, env validation, `AGENTS.md`, CI, Vercel deplo
 
 ---
 
-## M1 — Data model and auth — in progress
+## M1 — Data model and auth ✅ complete
 
 **Done:** T1 `Requirement` type and Zod schemas · T2 all 8 Drizzle tables pushed to Neon ·
 T3 query scoping helper with UUID validation · T4 Auth.js v5 credentials with scrypt
-hashing · T5 register and profile API endpoints with boundary validation.
+hashing · T5 register and profile API endpoints with boundary validation · T7 remove attemptsUsed ·
+T6 register, login and profile UI.
 
 ### T7 — Remove `attemptsUsed` (do this before T6)
 
-**Status:** todo
+**Status:** done
 
 Attempt limits are per-exam, not per-person. A single profile column is meaningless once a
 student has two targets, and most MP posts cap by age rather than attempts.
 
-- [ ] Drop the column from `profiles` in `db/schema.ts`, run `db:push`
-- [ ] Remove from profile Zod schemas, the `PUT` handler, and test fixtures
-- [ ] Keep `"attempts"` in `RequirementKind`, unimplemented, with a comment explaining that
+- [x] Drop the column from `profiles` in `db/schema.ts`, run `db:push`
+- [x] Remove from profile Zod schemas, the `PUT` handler, and test fixtures
+- [x] Keep `"attempts"` in `RequirementKind`, unimplemented, with a comment explaining that
       it needs a per-target `attempts(userId, opportunityId, count)` table if ever required
-- [ ] `DECISIONS.md` entry
+- [x] `DECISIONS.md` entry
 
 ### T6 — Register, login and profile UI
 
-**Status:** todo
+**Status:** done
 
-- [ ] `/register` — form validation, error states, redirect on success
-- [ ] `/login` — email and password, credential error handling
-- [ ] `/profile` — **five fields**: dateOfBirth, category, domicileState, qualification,
+- [x] `/register` — form validation, error states, redirect on success
+- [x] `/login` — email and password, credential error handling
+- [x] `/profile` — **five fields**: dateOfBirth, category, domicileState, qualification,
       preference. No `attemptsUsed`
-- [ ] Header shell reflects session state
-- [ ] End-to-end check: register → login → view profile → edit profile
+- [x] Header shell reflects session state
+- [x] End-to-end check: register → login → view profile → edit profile
 
 ### M1 acceptance criteria
 
-- [ ] A new user can register, log in, save a profile, and see it after re-login
-- [ ] `attemptsUsed` appears nowhere in the codebase
-- [ ] All quality checks pass
+- [x] A new user can register, log in, save a profile, and see it after re-login
+- [x] `attemptsUsed` appears nowhere in the codebase
+- [x] All quality checks pass
 
 **Human gate:** the `Requirement` type must be reviewed before M3 begins.
 
