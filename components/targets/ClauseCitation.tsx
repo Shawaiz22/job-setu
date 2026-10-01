@@ -3,21 +3,30 @@ import type { RequirementSource } from "@/modules/eligibility/types";
 interface ClauseCitationProps {
   source: RequirementSource;
   className?: string;
+  compact?: boolean;
 }
 
 export function ClauseCitation({
   source,
   className = "",
+  compact = false,
 }: ClauseCitationProps) {
   if (source.type === "notification") {
     return (
       <div
-        className={`inline-flex items-center gap-1.5 rounded-md border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[11px] font-medium text-neutral-700 ${className}`}
+        className={`inline-flex max-w-full items-start gap-1.5 rounded-md border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[11px] font-medium text-neutral-700 ${className}`}
+        title={source.clause}
       >
-        <span className="font-semibold text-neutral-900">Doc Citation:</span>
-        <span className="font-mono text-neutral-800">{source.clause}</span>
+        <span className="shrink-0 font-semibold text-neutral-900">
+          Doc Citation:
+        </span>
+        <span
+          className={`font-mono text-neutral-800 ${compact ? "line-clamp-2" : ""}`}
+        >
+          {source.clause}
+        </span>
         {source.page && (
-          <span className="text-neutral-500">(p. {source.page})</span>
+          <span className="shrink-0 text-neutral-500">(p. {source.page})</span>
         )}
       </div>
     );
@@ -26,10 +35,17 @@ export function ClauseCitation({
   if (source.type === "scheme") {
     return (
       <div
-        className={`inline-flex items-center gap-1.5 rounded-md border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[11px] font-medium text-neutral-700 ${className}`}
+        className={`inline-flex max-w-full items-start gap-1.5 rounded-md border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[11px] font-medium text-neutral-700 ${className}`}
+        title={source.clause}
       >
-        <span className="font-semibold text-neutral-900">Scheme Clause:</span>
-        <span className="font-mono text-neutral-800">{source.clause}</span>
+        <span className="shrink-0 font-semibold text-neutral-900">
+          Scheme Clause:
+        </span>
+        <span
+          className={`font-mono text-neutral-800 ${compact ? "line-clamp-2" : ""}`}
+        >
+          {source.clause}
+        </span>
       </div>
     );
   }
@@ -37,7 +53,7 @@ export function ClauseCitation({
   if (source.type === "interview_evidence") {
     return (
       <div
-        className={`inline-flex items-center gap-1.5 rounded-md border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[11px] font-medium text-neutral-600 ${className}`}
+        className={`inline-flex max-w-full items-center gap-1.5 rounded-md border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[11px] font-medium text-neutral-600 ${className}`}
       >
         <span>Interview Evidence:</span>
         <span className="font-semibold text-neutral-800">
@@ -50,10 +66,13 @@ export function ClauseCitation({
   if (source.type === "job_description") {
     return (
       <div
-        className={`inline-flex items-center gap-1.5 rounded-md border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[11px] font-medium text-neutral-600 ${className}`}
+        className={`inline-flex max-w-full items-start gap-1.5 rounded-md border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[11px] font-medium text-neutral-600 ${className}`}
+        title={source.excerpt}
       >
-        <span>JD Excerpt:</span>
-        <span className="text-neutral-700 italic">
+        <span className="shrink-0">JD Excerpt:</span>
+        <span
+          className={`text-neutral-700 italic ${compact ? "line-clamp-2" : ""}`}
+        >
           &quot;{source.excerpt}&quot;
         </span>
       </div>

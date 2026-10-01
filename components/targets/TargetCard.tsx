@@ -31,7 +31,7 @@ export function TargetCard({ target, onDelete, deleting }: TargetCardProps) {
   const { evaluation } = target;
 
   return (
-    <div className="flex flex-col justify-between rounded-xl border border-neutral-200 bg-white p-5 shadow-xs transition hover:shadow-md">
+    <div className="dark:border-border/80 dark:bg-card flex h-full flex-col justify-between rounded-xl border border-neutral-200 bg-white p-5 shadow-xs transition hover:shadow-md">
       <div>
         {/* Header with kind and verdict badge */}
         <div className="flex items-start justify-between gap-3">
@@ -48,23 +48,43 @@ export function TargetCard({ target, onDelete, deleting }: TargetCardProps) {
 
         {/* Verdict Specific Details */}
         {evaluation?.status === "blocked" && (
-          <div className="mt-4 space-y-2 rounded-lg border border-rose-200 bg-rose-50/60 p-3 text-xs">
-            <div className="font-semibold text-rose-900">
-              Mandatory Rule Failure:
+          <div className="mt-4 space-y-2 rounded-lg border border-rose-200 bg-rose-50/70 p-3 text-xs dark:border-rose-950 dark:bg-rose-950/30">
+            <div className="flex items-center justify-between font-semibold text-rose-900 dark:text-rose-200">
+              <span>Mandatory Rule Failure:</span>
+              {evaluation.failures.length > 1 && (
+                <span className="rounded bg-rose-200/80 px-1.5 py-0.5 text-[10px] font-bold text-rose-800 dark:bg-rose-900 dark:text-rose-200">
+                  {evaluation.failures.length} blocked criteria
+                </span>
+              )}
             </div>
-            {evaluation.failures.map((f, i) => (
-              <div key={i} className="space-y-1">
-                <p className="text-rose-800">
-                  <span className="font-medium">• {f.reason}</span>
-                  {f.shortfall && (
-                    <span className="ml-1 text-rose-600">({f.shortfall})</span>
-                  )}
-                </p>
-                <div className="pt-0.5">
-                  <ClauseCitation source={f.requirement.source} />
+
+            <div className="max-h-36 space-y-2 overflow-y-auto pr-1">
+              {evaluation.failures.slice(0, 1).map((f, i) => (
+                <div key={i} className="space-y-1">
+                  <p
+                    className="line-clamp-2 leading-snug text-rose-800 dark:text-rose-300"
+                    title={f.reason}
+                  >
+                    <span className="font-medium">• {f.reason}</span>
+                    {f.shortfall && (
+                      <span className="ml-1 text-rose-600 dark:text-rose-400">
+                        ({f.shortfall})
+                      </span>
+                    )}
+                  </p>
+                  <div className="pt-0.5">
+                    <ClauseCitation source={f.requirement.source} compact />
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+
+              {evaluation.failures.length > 1 && (
+                <p className="pt-0.5 text-[11px] font-medium text-rose-700 dark:text-rose-400">
+                  +{evaluation.failures.length - 1} more blocking rule failure
+                  {evaluation.failures.length - 1 > 1 ? "s" : ""}
+                </p>
+              )}
+            </div>
           </div>
         )}
 
