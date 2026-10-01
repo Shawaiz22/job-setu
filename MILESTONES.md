@@ -18,7 +18,7 @@ Keep this table accurate. It is the first thing anyone reads.
 | M0        | Bootstrap               | complete                         |
 | M1        | Data model and auth     | complete                         |
 | M2        | Privacy foundation      | complete                         |
-| M3        | Eligibility engine      | not started                      |
+| M3        | Eligibility engine      | complete                         |
 | M4        | Target workspace UI     | not started                      |
 | M5        | Notification ingestion  | not started                      |
 | M6        | Schemes and demo polish | not started                      |
