@@ -1,7 +1,40 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { SEED_OPPORTUNITIES } from "@/modules/seed/eligibility";
 import { DEMO_UNPROCESSED_SAMPLES } from "@/modules/seed/demo-samples";
 import { extractRequirementsFromText } from "@/modules/ingestion/extract";
+
+vi.mock("ai", () => ({
+  generateObject: vi.fn(async () => ({
+    object: {
+      title: "MP High Court District Judge (Entry Level) Examination 2026",
+      department: "High Court of Madhya Pradesh, Jabalpur",
+      state: "Madhya Pradesh",
+      closesOn: "2026-12-15",
+      requirements: [
+        {
+          kind: "age",
+          op: "min",
+          value: 35,
+          blocking: true,
+          weight: 10,
+          label: "Minimum Age 35 Years",
+          clause:
+            "Clause 2(A): The candidate must have attained the age of 35 years as on 01/01/2026.",
+        },
+        {
+          kind: "experience_years",
+          op: "min",
+          value: 7,
+          blocking: true,
+          weight: 10,
+          label: "7 Years Continuous Advocate Practice",
+          clause:
+            "Clause 2(B): Must have been an Advocate continuously practicing for not less than 7 years.",
+        },
+      ],
+    },
+  })),
+}));
 
 describe("MP Notification Corpus & Live Demo Data (M5 T5)", () => {
   it("contains at least 10 real MP notifications in seed corpus with official clause citations", () => {
@@ -13,7 +46,6 @@ describe("MP Notification Corpus & Live Demo Data (M5 T5)", () => {
       expect(opp.state).toBe("Madhya Pradesh");
       expect(opp.requirements.length).toBeGreaterThanOrEqual(2);
 
-      // Verify every requirement carries an official clause citation
       for (const req of opp.requirements) {
         expect(req.source.type).toBe("notification");
         if (req.source.type === "notification") {
@@ -51,5 +83,5 @@ describe("MP Notification Corpus & Live Demo Data (M5 T5)", () => {
         expect(req.source.clause).toBeTruthy();
       }
     }
-  }, 45000);
+  });
 });

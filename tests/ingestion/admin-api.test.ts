@@ -32,9 +32,32 @@ vi.mock("@/auth", () => ({
   auth: vi.fn(async () => currentSession),
 }));
 
+// Mock AI generateObject so admin API test runs instantly without external rate limits
+vi.mock("ai", () => ({
+  generateObject: vi.fn(async () => ({
+    object: {
+      title: "MP Patwari Examination 2026",
+      department: "Revenue Department, MP",
+      state: "Madhya Pradesh",
+      closesOn: "2026-12-31",
+      requirements: [
+        {
+          kind: "age",
+          op: "max",
+          value: 40,
+          blocking: true,
+          weight: 10,
+          label: "Age Limit: 18 to 40 years",
+          clause:
+            "Clause 2.1: Candidates must be between 18 and 40 years of age.",
+        },
+      ],
+    },
+  })),
+}));
+
 describe("Admin Notifications Ingestion & Review API (M5 T2)", () => {
   beforeEach(async () => {
-    // Seed users in db
     await db
       .insert(users)
       .values([
@@ -78,7 +101,6 @@ describe("Admin Notifications Ingestion & Review API (M5 T2)", () => {
       Criteria:
       Clause 2.1: Candidates must be between 18 and 40 years of age.
       Clause 3.1: Candidate must hold a recognized Bachelor's Degree.
-      Clause 4.1: Must possess MP Domicile Certificate.
     `;
 
     // 1. Ingest via admin API
@@ -150,5 +172,5 @@ describe("Admin Notifications Ingestion & Review API (M5 T2)", () => {
     await deleteOpportunity(new Request("http://localhost"), {
       params: Promise.resolve({ id: oppId }),
     });
-  }, 35000); // 35s timeout for live AI extraction
+  });
 });
