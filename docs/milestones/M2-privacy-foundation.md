@@ -12,7 +12,7 @@ Sensitive data handling is guaranteed and proven correct before any sensitive da
 - [x] `modules/privacy/redact.ts` exports pure functions `stripPII(text)` and `restorePII(text, map)` with 100% test coverage
 - [x] A test proves `stripPII` turns real resume/profile lines into anonymized tokens (e.g., `[NAME]`, `[EMAIL]`, `[PHONE]`, `[DOB]`)
 - [x] Application-level encryption (`lib/crypto/encryption.ts`) with AES-256-GCM encrypts `dateOfBirth`, `category`, and `domicileState` before writing to Postgres and decrypts on retrieval
-- [ ] Logger / error reporting wrapper (`lib/logger.ts`) proves that sensitive fields cannot leak into logs or error traces even during exceptions
+- [x] Logger / error reporting wrapper (`lib/logger.ts`) proves that sensitive fields cannot leak into logs or error traces even during exceptions
 - [ ] Consent tracking table (`consents`) and UI verify purpose-bound, versioned, revocable consent before processing sensitive data
 - [ ] `GET /api/v1/profile/export` returns the user's full data export as JSON
 - [ ] Cascading deletion test proves that deleting a user or profile leaves zero orphaned rows across `profiles`, `skills`, `targets`, `consents`, and `experiences`
@@ -43,12 +43,12 @@ Sensitive data handling is guaranteed and proven correct before any sensitive da
 
 ### T3 — Log & Error Trace Sanitizer
 
-**Status:** todo  
-**Owner:**
+**Status:** done  
+**Owner:** Antigravity (Ponytail)
 
-- [ ] Implement `lib/logger.ts` with automatic PII and sensitive key redaction
-- [ ] Ensure sensitive fields (`dateOfBirth`, `category`, `domicileState`, passwords, tokens) are recursively scrubbed from all log payloads
-- [ ] Write tests in `tests/privacy/logger.test.ts` verifying error traces containing sensitive objects are redacted
+- [x] Implement `lib/logger.ts` with automatic PII and sensitive key redaction
+- [x] Ensure sensitive fields (`dateOfBirth`, `category`, `domicileState`, passwords, tokens) are recursively scrubbed from all log payloads
+- [x] Write tests in `tests/privacy/logger.test.ts` verifying error traces containing sensitive objects are redacted
 
 ### T4 — Purpose-Bound Consent Model & UI
 
@@ -75,6 +75,7 @@ Sensitive data handling is guaranteed and proven correct before any sensitive da
 
 ## Changelog
 
+- 2026-10-01: Completed T3 (Log & error trace sanitizer `lib/logger.ts` preventing sensitive leaks into logs or traces, verified via `tests/privacy/logger.test.ts`).
 - 2026-10-01: Completed T2 (AES-256-GCM application-level encryption for sensitive profile attributes at rest, wired into profile route, verified via `tests/privacy/encryption.test.ts`).
 - 2026-10-01: Completed T1 (PII Redaction Layer with `stripPII` and `restorePII`, pure module, 100% test coverage in `tests/privacy/redact.test.ts`).
 - 2026-10-01: Created initial milestone document for M2 (Privacy Foundation) per `SPEC.md` section 9 and `MILESTONES.md`.
