@@ -19,7 +19,7 @@ Keep this table accurate. It is the first thing anyone reads.
 | M1        | Data model and auth     | complete                         |
 | M2        | Privacy foundation      | complete                         |
 | M3        | Eligibility engine      | complete                         |
-| M4        | Target workspace UI     | not started                      |
+| M4        | Target workspace UI     | complete                         |
 | M5        | Notification ingestion  | not started                      |
 | M6        | Schemes and demo polish | not started                      |
 | M7        | Submission pack         | not started                      |
