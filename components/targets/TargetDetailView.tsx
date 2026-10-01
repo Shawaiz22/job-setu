@@ -9,6 +9,7 @@ import { VerdictBanner } from "./VerdictBanner";
 import { ReadinessTab } from "./ReadinessTab";
 import { GapsTab } from "./GapsTab";
 import { PrepIntelTab } from "./PrepIntelTab";
+import { AlternativeSchemes, type MatchingScheme } from "./AlternativeSchemes";
 import type { EvaluationResult } from "@/modules/eligibility/types";
 
 interface TargetDetailViewProps {
@@ -22,6 +23,7 @@ interface TargetDetailViewProps {
   evaluatedOn: string;
   hasConsent: boolean;
   hasProfile: boolean;
+  alternativeSchemes?: MatchingScheme[];
 }
 
 export function TargetDetailView({
@@ -30,6 +32,7 @@ export function TargetDetailView({
   evaluatedOn,
   hasConsent,
   hasProfile,
+  alternativeSchemes = [],
 }: TargetDetailViewProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"readiness" | "gaps" | "intel">(
@@ -113,6 +116,11 @@ export function TargetDetailView({
       {/* Verdict Banner */}
       {evaluation && (
         <VerdictBanner evaluation={evaluation} evaluatedOn={evaluatedOn} />
+      )}
+
+      {/* Alternative MP Welfare Schemes when Blocked */}
+      {evaluation?.status === "blocked" && alternativeSchemes.length > 0 && (
+        <AlternativeSchemes schemes={alternativeSchemes} />
       )}
 
       {/* Tabs Navigation */}
