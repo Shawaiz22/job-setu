@@ -1,6 +1,6 @@
 # M2 — Privacy Foundation
 
-**Status:** not started  
+**Status:** in progress  
 **Depends on:** M1
 
 ## Goal
@@ -9,8 +9,8 @@ Sensitive data handling is guaranteed and proven correct before any sensitive da
 
 ## Acceptance criteria
 
-- [ ] `modules/privacy/redact.ts` exports pure functions `stripPII(text)` and `restorePII(text, map)` with 100% test coverage
-- [ ] A test proves `stripPII` turns real resume/profile lines into anonymized tokens (e.g., `[NAME]`, `[EMAIL]`, `[PHONE]`, `[DOB]`)
+- [x] `modules/privacy/redact.ts` exports pure functions `stripPII(text)` and `restorePII(text, map)` with 100% test coverage
+- [x] A test proves `stripPII` turns real resume/profile lines into anonymized tokens (e.g., `[NAME]`, `[EMAIL]`, `[PHONE]`, `[DOB]`)
 - [ ] Application-level encryption (`lib/crypto/encryption.ts`) with AES-256-GCM encrypts `dateOfBirth`, `category`, and `domicileState` before writing to Postgres and decrypts on retrieval
 - [ ] Logger / error reporting wrapper (`lib/logger.ts`) proves that sensitive fields cannot leak into logs or error traces even during exceptions
 - [ ] Consent tracking table (`consents`) and UI verify purpose-bound, versioned, revocable consent before processing sensitive data
@@ -22,14 +22,14 @@ Sensitive data handling is guaranteed and proven correct before any sensitive da
 
 ### T1 — PII Redaction Layer (`modules/privacy/redact.ts`)
 
-**Status:** todo  
-**Owner:**
+**Status:** done  
+**Owner:** Antigravity (Ponytail)
 
-- [ ] Create `modules/privacy/redact.ts` as a pure module (no DB, no network, no side effects)
-- [ ] Implement `stripPII(text: string): { redactedText: string; tokenMap: Map<string, string> }`
-- [ ] Implement `restorePII(redactedText: string, tokenMap: Map<string, string>): string`
-- [ ] Detect and redact names, phone numbers, email addresses, dates of birth, and identity numbers (Aadhaar/PAN patterns)
-- [ ] Write unit tests in `tests/privacy/redact.test.ts` verifying bidirectional redaction and restoration
+- [x] Create `modules/privacy/redact.ts` as a pure module (no DB, no network, no side effects)
+- [x] Implement `stripPII(text: string): { redactedText: string; tokenMap: Map<string, string> }`
+- [x] Implement `restorePII(redactedText: string, tokenMap: Map<string, string>): string`
+- [x] Detect and redact names, phone numbers, email addresses, dates of birth, and identity numbers (Aadhaar/PAN patterns)
+- [x] Write unit tests in `tests/privacy/redact.test.ts` verifying bidirectional redaction and restoration
 
 ### T2 — Application-Level Encryption for Sensitive Profile Fields
 
@@ -75,4 +75,5 @@ Sensitive data handling is guaranteed and proven correct before any sensitive da
 
 ## Changelog
 
+- 2026-10-01: Completed T1 (PII Redaction Layer with `stripPII` and `restorePII`, pure module, 100% test coverage in `tests/privacy/redact.test.ts`).
 - 2026-10-01: Created initial milestone document for M2 (Privacy Foundation) per `SPEC.md` section 9 and `MILESTONES.md`.
