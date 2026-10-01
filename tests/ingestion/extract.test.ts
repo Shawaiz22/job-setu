@@ -67,7 +67,7 @@ describe("Ingestion Extraction Engine (M5 T1)", () => {
     const ageReq = result.requirements.find((r) => r.kind === "age");
     expect(ageReq).toBeDefined();
     expect(ageReq?.blocking).toBe(true);
-  }, 25000); // 25s timeout for AI network call
+  }, 45000); // 45s timeout for AI network call
 
   it("extracts requirements from job description text with excerpt citations", async () => {
     const sampleJD = `
@@ -95,5 +95,5 @@ describe("Ingestion Extraction Engine (M5 T1)", () => {
         expect(req.source.excerpt).toBeTruthy();
       }
     }
-  }, 25000);
+  }, 45000);
 });
