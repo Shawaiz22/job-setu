@@ -1,6 +1,6 @@
 # M1 — Data Model and Auth
 
-**Status:** not started  
+**Status:** complete  
 **Depends on:** M0
 
 ## Goal
@@ -9,14 +9,14 @@ Users can register, log in, and manage their profile with strict Zod validation 
 
 ## Acceptance criteria
 
-- [ ] `modules/eligibility/types.ts` defines the `Requirement` type exactly as specified in `SPEC.md` section 5.1
-- [ ] Drizzle schema defines all 8 tables (`users`, `profiles`, `skills`, `targets`, `opportunities`, `archetypes`, `experiences`, `consents`) and pushes cleanly to Neon Postgres via `npm run db:push`
-- [ ] Auth.js v5 credentials authentication works with secure password hashing and httpOnly session cookies
-- [ ] Registration (`/register`) and Login (`/login`) pages function properly with input validation
-- [ ] Profile CRUD (`GET /api/v1/profile` and `PUT /api/v1/profile`) validates data at the boundary with Zod
-- [ ] Query scoping helper (`lib/db/scope.ts`) strictly enforces `userId` filtering and UUID route parameter validation
-- [ ] Comprehensive unit and integration tests pass for data model, auth endpoints, and scoping helpers
-- [ ] All quality checks pass (`npm run typecheck && npm run lint && npm run test && npm run build`)
+- [x] `modules/eligibility/types.ts` defines the `Requirement` type exactly as specified in `SPEC.md` section 5.1
+- [x] Drizzle schema defines all 8 tables (`users`, `profiles`, `skills`, `targets`, `opportunities`, `archetypes`, `experiences`, `consents`) and pushes cleanly to Neon Postgres via `npm run db:push`
+- [x] Auth.js v5 credentials authentication works with secure password hashing and httpOnly session cookies
+- [x] Registration (`/register`) and Login (`/login`) pages function properly with input validation
+- [x] Profile CRUD (`GET /api/v1/profile` and `PUT /api/v1/profile`) validates data at the boundary with Zod
+- [x] Query scoping helper (`lib/db/scope.ts`) strictly enforces `userId` filtering and UUID route parameter validation
+- [x] Comprehensive unit and integration tests pass for data model, auth endpoints, and scoping helpers
+- [x] All quality checks pass (`npm run typecheck && npm run lint && npm run test && npm run build`)
 
 ## Tasks
 
@@ -102,15 +102,15 @@ Users can register, log in, and manage their profile with strict Zod validation 
 
 ### T6 — Register, Login, and Profile UI
 
-**Status:** in progress
+**Status:** done
 **Owner:** Antigravity
 
-- [ ] `/register` — form validation, error states, redirect on success
-- [ ] `/login` — email and password, credential error handling
-- [ ] `/profile` — five fields: dateOfBirth, category, domicileState, qualification, preference. No `attemptsUsed`
-- [ ] Header shell reflects session state
-- [ ] End-to-end check: register → login → view profile → edit profile
-      **Notes:** Responsive design following project styling conventions.
+- [x] `/register` — form validation, error states, redirect on success
+- [x] `/login` — email and password, credential error handling, registration success notice
+- [x] `/profile` — five fields: dateOfBirth, category, domicileState, qualification, preference. No `attemptsUsed`
+- [x] Header shell reflects session state (dynamic login/register vs user email & logout)
+- [x] End-to-end check: register → login → view profile → edit profile
+      **Notes:** Built responsive UI using shadcn components and base tokens. Tested full registration, credential authentication, session persistence in header, profile loading, saving, and cascading data deletion.
 
 ## Human actions required
 
@@ -125,4 +125,4 @@ Users can register, log in, and manage their profile with strict Zod validation 
 - 2026-10-01: Completed T4 (Authentication with Auth.js v5) with credentials provider, JWT session, native crypto password hashing in `lib/auth/password.ts`, and test suite in `tests/auth.test.ts`.
 - 2026-10-01: Completed T5 (Registration & Profile API Endpoints) with Zod validation, user registration, profile CRUD, session-based scoping, and integration tests in `tests/api-endpoints.test.ts`.
 - 2026-10-01: Completed T7 (Remove `attemptsUsed`) across schema, validations, route handlers, and engine types; documented in DECISIONS.md.
-- 2026-10-01: Claimed T6 (Register, Login, and Profile UI) to implement next.
+- 2026-10-01: Completed T6 (Register, Login, and Profile UI) with responsive pages and session-aware navigation shell. Milestone 1 complete.
