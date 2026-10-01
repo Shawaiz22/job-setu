@@ -12,6 +12,48 @@ An eligibility verification platform for Madhya Pradesh government opportunities
 
 ---
 
+## System Architecture
+
+```mermaid
+flowchart TB
+    subgraph Clients["Clients"]
+        Student["Candidate / Student"]
+        Admin["Administrator"]
+    end
+
+    subgraph App["Kariyar Setu Web App (Next.js 15+ & RSC)"]
+        UI["Server Components & Interactive UI"]
+        API["REST Endpoints (/api/v1)"]
+    end
+
+    subgraph Core["Pure Verification Core"]
+        Engine["evaluateEligibility()<br/>• Pure Function (0 DB / 0 Fetch)<br/>• Deterministic Verdict + Citation"]
+        Matcher["matchesQualification()<br/>• Equivalence Trees (B.Tech ⟷ B.E.)"]
+    end
+
+    subgraph Security["Privacy & Cryptography"]
+        AES["AES-256-GCM Encryption"]
+        Redact["PII Redaction Engine"]
+        Tenancy["Strict Row-Level User Scoping"]
+    end
+
+    subgraph Storage["Neon PostgreSQL"]
+        DB[(Postgres Database)]
+    end
+
+    Student --> UI
+    Admin --> UI
+    UI --> API
+    API --> Engine
+    Engine --> Matcher
+    API --> Security
+    Security --> DB
+```
+
+> For deep architectural dives, verification sequence diagrams, and ingestion pipelines, see [docs/architecture.md](docs/architecture.md).
+
+---
+
 ## Getting Started
 
 ### 1. Clone & Install Dependencies
