@@ -8,6 +8,7 @@ export type RequirementKind =
   | "skill"
   | "certification"
   | "experience_years"
+  // Needs a per-target attempts(userId, opportunityId, count) table if a real notification ever requires it.
   | "attempts";
 
 export type RequirementOp = "max" | "min" | "equals" | "has" | "one_of";
@@ -55,7 +56,6 @@ export type EvaluationInput = {
     category: string;
     domicileState: string;
     qualification: string;
-    attemptsUsed: number;
   };
   skills: { name: string; evidence: "verified" | "project" | "declared" }[];
   requirements: Requirement[];
@@ -166,7 +166,6 @@ export const EvaluationInputSchema = z.object({
     category: z.string().min(1),
     domicileState: z.string().min(1),
     qualification: z.string().min(1),
-    attemptsUsed: z.number().int().nonnegative(),
   }),
   skills: z.array(
     z.object({

@@ -68,6 +68,6 @@ An eligibility verification platform for Madhya Pradesh government opportunities
 - **One Step at a Time**: Perform one small, coherent change, stop, and report. Never chain unapproved steps.
 - **Never Run `git push`**: The user pushes code. Agents must never execute `git push`.
 - **Always Ask Before Committing**: Never run `git commit` without explicit confirmation from the user. Always pause and ask.
-- **Keep Documentation Untracked**: `SPEC.md`, `MILESTONES.md`, and `docs/` must remain uncommitted and untracked in git.
+- **Track Task & Milestone Docs**: Keep `MILESTONES.md` and `docs/` tracked in git so all collaborators know current progress. Keep `SPEC.md` untracked.
 - **Small, Frequent, Conventional Commits**: Follow Conventional Commits (`feat: ...`, `fix: ...`, `chore: ...`). Commits are validated via `commitlint` and `husky`.
 - **Secret Protection**: Never commit secrets. Ensure `.env.local` is gitignored; `.env.example` contains variable names only.

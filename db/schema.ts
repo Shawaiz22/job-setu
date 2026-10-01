@@ -70,7 +70,6 @@ export const profiles = pgTable("profiles", {
   category: text("category").notNull(), // caste data, encrypted at rest in M2
   domicileState: text("domicile_state").notNull(), // encrypted at rest in M2
   qualification: text("qualification").notNull(),
-  attemptsUsed: integer("attempts_used").default(0).notNull(),
   preference: preferenceEnum("preference").default("both").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()

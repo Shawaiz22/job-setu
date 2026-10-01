@@ -61,7 +61,6 @@ describe("Database Schema & Neon Postgres Verification", () => {
         category: "General",
         domicileState: "Madhya Pradesh",
         qualification: "Graduate in Computer Science",
-        attemptsUsed: 0,
         preference: "both",
       })
       .returning();
