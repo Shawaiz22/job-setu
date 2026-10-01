@@ -5,6 +5,10 @@ import { db } from "@/db";
 import { consents, experiences, profiles, skills, targets } from "@/db/schema";
 import { withUserOnly } from "@/lib/db/scope";
 import { profileUpsertSchema } from "@/lib/validations/profile";
+import {
+  encryptProfileFields,
+  decryptProfileFields,
+} from "@/lib/crypto/encryption";
 
 /** Retrieves the current authenticated user's profile. */
 export async function GET() {
@@ -23,7 +27,7 @@ export async function GET() {
     return NextResponse.json({ error: "Profile not found" }, { status: 404 });
   }
 
-  return NextResponse.json({ profile });
+  return NextResponse.json({ profile: decryptProfileFields(profile) });
 }
 
 /** Creates or updates the authenticated user's profile. */
@@ -50,22 +54,28 @@ export async function PUT(request: Request) {
     const { dateOfBirth, category, domicileState, qualification, preference } =
       parsed.data;
 
+    const encrypted = encryptProfileFields({
+      dateOfBirth,
+      category,
+      domicileState,
+    });
+
     const [upserted] = await db
       .insert(profiles)
       .values({
         userId: session.user.id,
-        dateOfBirth,
-        category,
-        domicileState,
+        dateOfBirth: encrypted.dateOfBirth,
+        category: encrypted.category,
+        domicileState: encrypted.domicileState,
         qualification,
         preference,
       })
       .onConflictDoUpdate({
         target: profiles.userId,
         set: {
-          dateOfBirth,
-          category,
-          domicileState,
+          dateOfBirth: encrypted.dateOfBirth,
+          category: encrypted.category,
+          domicileState: encrypted.domicileState,
           qualification,
           preference,
           updatedAt: new Date(),
@@ -73,7 +83,17 @@ export async function PUT(request: Request) {
       })
       .returning();
 
-    return NextResponse.json({ success: true, profile: upserted });
+    if (!upserted) {
+      return NextResponse.json(
+        { error: "Failed to persist profile" },
+        { status: 500 },
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      profile: decryptProfileFields(upserted),
+    });
   } catch {
     return NextResponse.json(
       { error: "Internal server error" },
