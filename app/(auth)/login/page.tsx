@@ -98,6 +98,30 @@ function LoginForm() {
               autoComplete="current-password"
             />
           </div>
+
+          {/* Quick Demo Credentials for Stage & Evaluation */}
+          <div className="border-border bg-muted/30 space-y-2 rounded-lg border border-dashed p-3 text-xs">
+            <div className="text-muted-foreground flex items-center justify-between font-medium">
+              <span>Quick Demo Fill:</span>
+              <span className="text-primary text-[10px] font-bold tracking-wider uppercase">
+                Evaluation Mode
+              </span>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-7 w-full text-xs"
+                onClick={() => {
+                  setEmail("demo@kariyarsetu.in");
+                  setPassword("DemoStudent123!");
+                }}
+              >
+                Demo Candidate
+              </Button>
+            </div>
+          </div>
         </CardContent>
         <CardFooter className="mt-2 flex flex-col gap-4">
           <Button type="submit" className="w-full" disabled={loading}>
