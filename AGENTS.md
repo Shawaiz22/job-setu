@@ -35,9 +35,15 @@ An eligibility verification platform for Madhya Pradesh government opportunities
    - Encrypt at rest; never log them at any level (including error traces); never put in URLs or query params; never send in AI prompts.
    - Run PII redaction (`modules/privacy/redact.ts`) before any text reaches an AI model.
    - Always scope user-owned database queries strictly by `userId`.
-4. **Dependency Hygiene**:
+4. **Modern & Non-Deprecated Code**:
+   - Always write clean, readable code using the latest non-deprecated APIs and conventions (e.g., Zod 4 `z.uuid()` instead of deprecated `z.string().uuid()`).
+   - Heed deprecation notices immediately and never introduce deprecated patterns.
+5. **Concise & Meaningful Comments**:
+   - Do not write verbose or redundant comments that create visual noise.
+   - Keep comments short, meaningful, and focused on non-obvious intent or rationale. Only comment when actually needed.
+6. **Dependency Hygiene**:
    - Do NOT add new dependencies or libraries beyond the specified stack in `SPEC.md` without asking for explicit approval first.
-5. **Human Action Gates — Stop and Ask**:
+7. **Human Action Gates — Stop and Ask**:
    - When encountering a human action gate (secrets, accounts, external approvals), stop immediately, state what is needed using the standard gate format, and wait. Do not stub, mock, or scaffold around it.
 
 ## 4. Standard Commands
@@ -60,5 +66,8 @@ An eligibility verification platform for Madhya Pradesh government opportunities
 ## 5. Commit & Working Protocol
 
 - **One Step at a Time**: Perform one small, coherent change, stop, and report. Never chain unapproved steps.
+- **Never Run `git push`**: The user pushes code. Agents must never execute `git push`.
+- **Always Ask Before Committing**: Never run `git commit` without explicit confirmation from the user. Always pause and ask.
+- **Track Task & Documentation**: Keep `SPEC.md`, `MILESTONES.md`, and `docs/` tracked in git so all collaborators know project requirements and status.
 - **Small, Frequent, Conventional Commits**: Follow Conventional Commits (`feat: ...`, `fix: ...`, `chore: ...`). Commits are validated via `commitlint` and `husky`.
 - **Secret Protection**: Never commit secrets. Ensure `.env.local` is gitignored; `.env.example` contains variable names only.

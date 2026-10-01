@@ -34,3 +34,11 @@
 - **Decision:** Enable `strict: true` and `noUncheckedIndexedAccess: true` in `tsconfig.json`.
 - **Context:** The core eligibility evaluation engine evaluates complex arrays of requirements, overrides, and gaps.
 - **Why not standard strict mode?** Standard strict mode types `array[i]` as `T` even when the index does not exist. `noUncheckedIndexedAccess` forces handling of `T | undefined`, eliminating unexpected out-of-bounds crashes during rule matching.
+
+---
+
+## 2026-10-01 — Removal of `attemptsUsed` from User Profile
+
+- **Decision:** Drop `attemptsUsed` from the `profiles` table and user profile creation/editing schemas. Keep `"attempts"` in the `RequirementKind` union for notification schemas, but do not evaluate it against a profile field.
+- **Context:** `SPEC.md` originally included `attemptsUsed: number` on the global profile.
+- **Why not a profile-level attempt count?** Attempt limits in government examinations (MPPSC, UPSC, etc.) are strictly per-exam and per-agency, not per-person. A single integer on a user's profile is semantically meaningless once a user targets multiple exams (e.g. 3 attempts for MPPSC vs 0 for Police). Furthermore, most Madhya Pradesh state recruitment posts cap by age rather than attempts. If a real notification requires an attempt limit in the future, it should be modeled via a dedicated per-target tracking table `attempts(userId, opportunityId, count)`.
