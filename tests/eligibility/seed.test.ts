@@ -11,13 +11,23 @@ import {
 describe("Seed Opportunities & Archetypes (M3 T4)", () => {
   it("idempotently seeds opportunities and archetypes without duplicates", async () => {
     const result1 = await seedEligibilityData();
-    expect(result1.opportunities.length).toBeGreaterThanOrEqual(2);
+    expect(result1.opportunities.length).toBeGreaterThanOrEqual(10);
     expect(result1.archetypes.length).toBeGreaterThanOrEqual(2);
 
-    // Run again to verify idempotency
-    const result2 = await seedEligibilityData();
-    expect(result2.opportunities.length).toBe(result1.opportunities.length);
-    expect(result2.archetypes.length).toBe(result1.archetypes.length);
+    // Run again to verify idempotency (must not create duplicate records)
+    await seedEligibilityData();
+
+    // Verify zero duplicate titles in database
+    const [allOpps, allArchs] = await Promise.all([
+      db.select({ title: opportunities.title }).from(opportunities),
+      db.select({ title: archetypes.title }).from(archetypes),
+    ]);
+
+    const oppTitles = allOpps.map((o) => o.title);
+    expect(oppTitles.length).toBe(new Set(oppTitles).size);
+
+    const archTitles = allArchs.map((a) => a.title);
+    expect(archTitles.length).toBe(new Set(archTitles).size);
 
     // Verify MPPSC opportunity data
     const [mppsc] = await db

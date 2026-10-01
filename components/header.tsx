@@ -21,12 +21,28 @@ export async function Header() {
         </div>
         <div className="flex items-center gap-4">
           {session?.user && (
-            <Link
-              href="/profile"
-              className="text-muted-foreground hover:text-foreground hidden text-xs font-medium transition-colors sm:inline"
-            >
-              Profile
-            </Link>
+            <>
+              <Link
+                href="/targets"
+                className="text-muted-foreground hover:text-foreground hidden text-xs font-medium transition-colors sm:inline"
+              >
+                Targets
+              </Link>
+              <Link
+                href="/profile"
+                className="text-muted-foreground hover:text-foreground hidden text-xs font-medium transition-colors sm:inline"
+              >
+                Profile
+              </Link>
+              {session.user.isAdmin && (
+                <Link
+                  href="/admin/notifications"
+                  className="hidden rounded bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-900 transition-colors hover:bg-amber-200 sm:inline"
+                >
+                  Admin
+                </Link>
+              )}
+            </>
           )}
           <AuthButtons user={session?.user} />
         </div>
