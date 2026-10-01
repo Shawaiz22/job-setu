@@ -34,6 +34,14 @@ export async function Header() {
               >
                 Profile
               </Link>
+              {session.user.isAdmin && (
+                <Link
+                  href="/admin/notifications"
+                  className="hidden rounded bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-900 transition-colors hover:bg-amber-200 sm:inline"
+                >
+                  Admin
+                </Link>
+              )}
             </>
           )}
           <AuthButtons user={session?.user} />

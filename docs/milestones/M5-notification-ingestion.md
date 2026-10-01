@@ -50,22 +50,24 @@ Provide a robust, legally grounded notification ingestion pipeline that extracts
 
 ### T3 — Admin Review & Publish UI (`app/admin/notifications/page.tsx`)
 
-**Status:** todo  
-**Owner:**
+**Status:** done  
+**Owner:** Antigravity (Ponytail)
 
-- [ ] Build `/admin/notifications` review dashboard displaying draft items
-- [ ] Show side-by-side or detailed breakdown of extracted clauses, criteria, and confidence
-- [ ] Implement 1-click Publish button (turns status to `live`)
-- [ ] Implement Delete/Reject draft action
+- [x] Build `/admin/notifications` review dashboard displaying draft items
+- [x] Show side-by-side or detailed breakdown of extracted clauses, criteria, and confidence
+- [x] Implement 1-click Publish button (turns status to `live`)
+- [x] Implement Delete/Reject draft action
+      **Notes:** Full inspection panel with ClauseCitation, filters for Draft/Live, and instant 1-click publishing.
 
 ### T4 — Job Description Paste Extraction Flow
 
-**Status:** todo  
-**Owner:**
+**Status:** done  
+**Owner:** Antigravity (Ponytail)
 
-- [ ] Support direct text pasting of private company job descriptions
-- [ ] Extract role archetypes / opportunities using the same pipeline
-- [ ] Preview extracted requirements before saving
+- [x] Support direct text pasting of private company job descriptions
+- [x] Extract role archetypes / opportunities using the same pipeline
+- [x] Preview extracted requirements before saving
+      **Notes:** Seamlessly integrated into Admin portal with PDF / Paste Text toggle.
 
 ### T5 — MP Notification Ingestion & Demo Data
 
