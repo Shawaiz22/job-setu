@@ -28,13 +28,14 @@ Provide a robust, legally grounded notification ingestion pipeline that extracts
 
 ### T1 — Ingestion Extraction Module (`modules/ingestion/`)
 
-**Status:** in progress  
+**Status:** done  
 **Owner:** Antigravity (Ponytail)
 
-- [ ] Implement PDF text extraction using `unpdf` with PII redaction
-- [ ] Implement AI extraction wrapper with `generateObject` and `RequirementArraySchema`
-- [ ] Enforce clause citation requirement (drop rules lacking citations)
-- [ ] Write unit tests verifying parsing, schema adherence, and citation validation
+- [x] Implement PDF text extraction using `unpdf` with PII redaction
+- [x] Implement AI extraction wrapper with `generateObject` and `RequirementArraySchema`
+- [x] Enforce clause citation requirement (drop rules lacking citations)
+- [x] Write unit tests verifying parsing, schema adherence, and citation validation
+      **Notes:** Verified with live Gemini AI extraction (`gemini-2.5-flash`), clause citation preservation, and pure Uint8Array PDF.js parsing. All 5 ingestion tests pass.
 
 ### T2 — Admin Notifications API (`app/api/v1/admin/notifications/`)
 
