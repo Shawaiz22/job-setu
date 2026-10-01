@@ -5,7 +5,7 @@
 
 ## Goal
 
-The deterministic, pure core of Job Setu is implemented and proven with 100% mathematical certainty. Inputs in, verdict out. Zero DB calls, zero `fetch`, zero environment variables, zero randomness, zero `Date.now()`. The engine handles category overrides, blocking hard-bars, future eligibility dates, weighted scoring with evidence multipliers, gap ranking by `weight × demandSignal`, real seeded opportunities/archetypes, and the `GET /api/v1/targets/[id]/evaluation` endpoint.
+The deterministic, pure core of Kariyar Setu is implemented and proven with 100% mathematical certainty. Inputs in, verdict out. Zero DB calls, zero `fetch`, zero environment variables, zero randomness, zero `Date.now()`. The engine handles category overrides, blocking hard-bars, future eligibility dates, weighted scoring with evidence multipliers, gap ranking by `weight × demandSignal`, real seeded opportunities/archetypes, and the `GET /api/v1/targets/[id]/evaluation` endpoint.
 
 ## Acceptance criteria
 

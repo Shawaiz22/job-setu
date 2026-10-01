@@ -2,84 +2,90 @@ import { describe, it, expect, vi } from "vitest";
 import { extractRequirementsFromText } from "@/modules/ingestion/extract";
 import { stripPII } from "@/modules/privacy/redact";
 
-// Mock AI generateObject so unit tests are deterministic, offline-capable, and do not exhaust Gemini 5 RPM rate limits
-vi.mock("ai", () => ({
-  generateObject: vi.fn(async ({ prompt }: { prompt: string }) => {
+vi.mock("ai", () => {
+  const handler = async ({ prompt }: { prompt: string }) => {
     if (
       prompt.includes("Tata Consultancy") ||
       prompt.includes("Cloud Systems")
     ) {
-      return {
-        object: {
-          title: "Cloud Systems Engineer",
-          department: "Tata Consultancy Services",
-          state: "Madhya Pradesh",
-          closesOn: "2026-12-15",
-          requirements: [
-            {
-              kind: "experience_years",
-              op: "min",
-              value: 2,
-              blocking: true,
-              weight: 9,
-              label: "2 Years Cloud Experience",
-              clause:
-                "Must have at least 2 years of hands-on experience in AWS or GCP cloud administration.",
-            },
-          ],
-        },
-      };
-    }
-
-    return {
-      object: {
-        title: "MPPSC State Services Examination 2026",
-        department:
-          "General Administration Department, Government of Madhya Pradesh",
+      const payload = {
+        title: "Cloud Systems Engineer",
+        department: "Tata Consultancy Services",
         state: "Madhya Pradesh",
-        closesOn: "2026-11-30",
+        closesOn: "2026-12-15",
         requirements: [
           {
-            kind: "age",
-            op: "max",
-            value: 33,
-            overrides: [
-              { whenCategory: "SC", value: 38 },
-              { whenCategory: "ST", value: 38 },
-              { whenCategory: "OBC", value: 38 },
-            ],
+            kind: "experience_years",
+            op: "min",
+            value: 2,
             blocking: true,
-            weight: 10,
-            label: "Maximum age shall not exceed 33 years",
+            weight: 9,
+            label: "2 Years Cloud Experience",
             clause:
-              "Clause 3.1: Minimum age of applicant must be 21 years and maximum age shall not exceed 33 years as on 01/01/2026.",
-            page: 4,
-          },
-          {
-            kind: "qualification",
-            op: "equals",
-            value: "graduate",
-            blocking: true,
-            weight: 10,
-            label: "Bachelor Degree Required",
-            clause:
-              "Clause 4.1: Candidate must hold a Bachelor's Degree in any discipline from a recognized University.",
-            page: 5,
-          },
-          {
-            kind: "skill",
-            op: "has",
-            value: "Uncited Skill",
-            blocking: false,
-            weight: 5,
-            label: "Uncited rule to drop",
-            clause: null, // Intentionally un-cited to verify dropping mechanism
+              "Must have at least 2 years of hands-on experience in AWS or GCP cloud administration.",
           },
         ],
-      },
+      };
+      return { object: payload, output: payload };
+    }
+
+    const payload = {
+      title: "MPPSC State Services Examination 2026",
+      department:
+        "General Administration Department, Government of Madhya Pradesh",
+      state: "Madhya Pradesh",
+      closesOn: "2026-11-30",
+      requirements: [
+        {
+          kind: "age",
+          op: "max",
+          value: 33,
+          overrides: [
+            { whenCategory: "SC", value: 38 },
+            { whenCategory: "ST", value: 38 },
+            { whenCategory: "OBC", value: 38 },
+          ],
+          blocking: true,
+          weight: 10,
+          label: "Maximum age shall not exceed 33 years",
+          clause:
+            "Clause 3.1: Minimum age of applicant must be 21 years and maximum age shall not exceed 33 years as on 01/01/2026.",
+          page: 4,
+        },
+        {
+          kind: "qualification",
+          op: "equals",
+          value: "graduate",
+          blocking: true,
+          weight: 10,
+          label: "Bachelor Degree Required",
+          clause:
+            "Clause 4.1: Candidate must hold a Bachelor's Degree in any discipline from a recognized University.",
+          page: 5,
+        },
+        {
+          kind: "skill",
+          op: "has",
+          value: "Uncited Skill",
+          blocking: false,
+          weight: 5,
+          label: "Uncited rule to drop",
+          clause: null, // Intentionally un-cited to verify dropping mechanism
+        },
+      ],
     };
-  }),
-}));
+
+    return { object: payload, output: payload };
+  };
+
+  return {
+    generateText: vi.fn(handler),
+    generateObject: vi.fn(handler),
+    Output: {
+      object: (cfg: unknown) => cfg,
+    },
+  };
+});
 
 describe("Ingestion Extraction Engine (M5 T1)", () => {
   it("redacts sensitive PII before ingestion without destroying document structure", () => {

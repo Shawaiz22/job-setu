@@ -13,13 +13,22 @@ interface AuthButtonsProps {
 
 export function AuthButtons({ user }: AuthButtonsProps) {
   if (user) {
+    const destination = user.isAdmin ? "/admin/notifications" : "/profile";
+
     return (
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3">
         <Link
-          href="/profile"
-          className="text-muted-foreground hover:text-foreground text-xs font-medium transition-colors"
+          href={destination}
+          className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 text-xs font-medium transition-colors"
         >
-          {user.email}
+          <span className="max-w-[130px] truncate sm:max-w-[200px]">
+            {user.email}
+          </span>
+          {user.isAdmin && (
+            <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:text-amber-300">
+              Admin
+            </span>
+          )}
         </Link>
         <Button
           variant="outline"

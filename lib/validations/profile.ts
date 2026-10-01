@@ -9,3 +9,16 @@ export const profileUpsertSchema = z.object({
 });
 
 export type ProfileUpsertInput = z.infer<typeof profileUpsertSchema>;
+
+export const skillCreateSchema = z.object({
+  name: z.string().trim().min(1, "Skill name is required").max(100),
+  evidence: z.enum(["declared", "project", "verified"]).default("declared"),
+});
+
+export type SkillCreateInput = z.infer<typeof skillCreateSchema>;
+
+export const skillDeleteSchema = z.object({
+  skillId: z.string().uuid("Invalid skill ID"),
+});
+
+export type SkillDeleteInput = z.infer<typeof skillDeleteSchema>;

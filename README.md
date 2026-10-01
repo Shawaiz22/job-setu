@@ -1,4 +1,4 @@
-# Job Setu
+# Kariyar Setu
 
 > **Every other platform recommends opportunities. We decide eligibility, and we cite the rule that decided it.**
 
@@ -8,7 +8,7 @@ An eligibility verification platform for Madhya Pradesh government opportunities
 
 ## Live Deployment
 
-- **Production URL:** [https://job-setu-app.vercel.app/](https://job-setu-app.vercel.app/)
+- **Production URL:** [https://kariyar-setu.vercel.app](https://kariyar-setu.vercel.app)
 
 ---
 

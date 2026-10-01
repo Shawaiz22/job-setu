@@ -54,6 +54,145 @@ function formatDuration(from: Date, to: Date): string {
   return `${remainingMonths} month${remainingMonths !== 1 ? "s" : ""}`;
 }
 
+function normalizeDegree(str: string): string {
+  return str
+    .toLowerCase()
+    .replace(/[.\-_/(),]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function normalizeCompact(str: string): string {
+  return str.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+const EQUIVALENCE_GROUPS: string[][] = [
+  [
+    "btech",
+    "be",
+    "bacheloroftechnology",
+    "bachelorofengineering",
+    "bachelorintechnology",
+    "bachelorinengineering",
+  ],
+  ["mtech", "me", "masteroftechnology", "masterofengineering"],
+  ["bca", "bachelorofcomputerapplications"],
+  ["mca", "masterofcomputerapplications"],
+  ["bsc", "bachelorofscience"],
+  ["msc", "masterofscience"],
+  ["bcom", "bachelorofcommerce"],
+  ["mcom", "masterofcommerce"],
+  ["ba", "bachelorofarts"],
+  ["ma", "masterofarts"],
+  ["bba", "bachelorofbusinessadministration"],
+  ["mba", "masterofbusinessadministration"],
+  [
+    "12th",
+    "12thpass",
+    "intermediate",
+    "highersecondary",
+    "102",
+    "seniorsecondary",
+  ],
+  ["10th", "10thpass", "matric", "matriculation", "highschool", "secondary"],
+  ["diploma", "polytechnic"],
+];
+
+function getCanonicalGroup(compactStr: string): number {
+  for (let i = 0; i < EQUIVALENCE_GROUPS.length; i++) {
+    const group = EQUIVALENCE_GROUPS[i];
+    if (!group) continue;
+    for (const token of group) {
+      if (compactStr.includes(token)) return i;
+    }
+  }
+  return -1;
+}
+
+function matchesSingleQualification(
+  candidatePart: string,
+  requiredPart: string,
+): boolean {
+  if (!candidatePart || !requiredPart) return false;
+
+  const candNorm = normalizeDegree(candidatePart);
+  const reqNorm = normalizeDegree(requiredPart);
+
+  if (candNorm === reqNorm) return true;
+
+  const candCompact = normalizeCompact(candidatePart);
+  const reqCompact = normalizeCompact(requiredPart);
+
+  if (!candCompact || !reqCompact) return false;
+  if (candCompact === reqCompact) return true;
+
+  // Containment
+  if (candCompact.includes(reqCompact) || reqCompact.includes(candCompact)) {
+    return true;
+  }
+
+  // Word token containment
+  const candWords = candNorm.split(" ").filter(Boolean);
+  const reqWords = reqNorm.split(" ").filter(Boolean);
+  if (reqWords.length > 0 && reqWords.every((rw) => candWords.includes(rw))) {
+    return true;
+  }
+
+  // Equivalence groups (e.g. btech <-> be, 12th <-> highersecondary)
+  const candGroup = getCanonicalGroup(candCompact);
+  const reqGroup = getCanonicalGroup(reqCompact);
+  if (candGroup !== -1 && candGroup === reqGroup) {
+    return true;
+  }
+
+  // General degree / graduation
+  const isDegreeGeneral = (s: string) =>
+    /^(graduate|graduation|bachelor|degree|any graduate|any graduation)$/i.test(
+      s,
+    ) ||
+    /graduate in/i.test(s) ||
+    /bachelor degree/i.test(s);
+
+  const isRecognizedDegree = (s: string) =>
+    /btech|be|bca|mca|bsc|bcom|ba|bba|degree|graduate|bachelor/.test(s);
+
+  if (isDegreeGeneral(reqNorm) && isRecognizedDegree(candCompact)) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Robust, deterministic degree & branch matching.
+ * Handles abbreviations (B.Tech / BTech / B.E.), branch specializations (e.g. "B.Tech - CSE" -> "B.Tech"),
+ * delimiter splitting, and standard degree equivalencies.
+ */
+function matchesQualification(
+  candidateQual: string,
+  requiredQual: string,
+): boolean {
+  if (!candidateQual || !requiredQual) return false;
+
+  const reqParts = requiredQual
+    .split(/[/|,]|\bor\b/i)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const candParts = candidateQual
+    .split(/[/|,]|\bor\b/i)
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  for (const rp of reqParts) {
+    if (matchesSingleQualification(candidateQual, rp)) return true;
+    for (const cp of candParts) {
+      if (matchesSingleQualification(cp, rp)) return true;
+    }
+  }
+
+  return false;
+}
+
 export interface RuleEvaluation {
   met: boolean;
   reason?: string;
@@ -146,27 +285,18 @@ export function evaluateRequirement(
     }
 
     case "qualification": {
-      const candidateQual = profile.qualification.trim().toLowerCase();
+      const allowedList = Array.isArray(req.value)
+        ? req.value.map(String)
+        : [String(req.value)];
 
-      if (req.op === "one_of" && Array.isArray(req.value)) {
-        const allowed = req.value.map((v) => String(v).trim().toLowerCase());
-        const matched = allowed.includes(candidateQual);
-        if (!matched) {
-          return {
-            met: false,
-            reason: `Requires one of [${req.value.join(", ")}]; candidate has ${profile.qualification}`,
-            shortfall: "missing required qualification",
-            evidenceMultiplier: 0,
-          };
-        }
-        return { met: true, evidenceMultiplier: 1.0 };
-      }
+      const matched = allowedList.some((allowedVal) =>
+        matchesQualification(profile.qualification, allowedVal),
+      );
 
-      const requiredQual = String(req.value).trim().toLowerCase();
-      if (candidateQual !== requiredQual) {
+      if (!matched) {
         return {
           met: false,
-          reason: `Requires qualification ${req.value}; candidate has ${profile.qualification}`,
+          reason: `Requires ${Array.isArray(req.value) ? `one of [${req.value.join(", ")}]` : req.value}; candidate has ${profile.qualification}`,
           shortfall: "missing required qualification",
           evidenceMultiplier: 0,
         };
